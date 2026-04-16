@@ -1,17 +1,8 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useEffect, useState, useCallback } from "react";
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-import service1 from "@/assets/service-1.jpg";
-import service2 from "@/assets/service-2.jpg";
-import service3 from "@/assets/service-3.jpg";
-import service4 from "@/assets/service-4.jpg";
-
-const services = [
-  { img: service1, title: "Architecture", desc: "Creating functional and stylish modern buildings with minimalist elegance." },
-  { img: service2, title: "Residential Space", desc: "Warm, inviting living spaces that blend comfort with contemporary design." },
-  { img: service3, title: "Interior Design", desc: "Thoughtful interiors that balance beauty, function, and personality." },
-  { img: service4, title: "Exterior Planning", desc: "Harmonious outdoor environments integrated with architectural vision." },
-];
+import { Link } from "@tanstack/react-router";
+import { services } from "@/data/services";
 
 // Duplicate for seamless loop
 const loopedServices = [...services, ...services];
@@ -101,18 +92,20 @@ export default function ServicesSection() {
               initial={{ y: 50, opacity: 0 }}
               animate={inView ? { y: 0, opacity: 1 } : {}}
               transition={{ duration: 0.6, delay: (i % services.length) * 0.15 }}
-              className="group cursor-pointer shrink-0 w-[75vw] sm:w-[45vw] md:w-[30vw] lg:w-[calc(25%-18px)]"
+              className="group shrink-0 w-[75vw] sm:w-[45vw] md:w-[30vw] lg:w-[calc(25%-18px)]"
             >
-              <div className="img-hover-zoom aspect-[4/5] mb-5">
-                <img src={s.img} alt={s.title} className="w-full h-full object-cover" loading="lazy" width={600} height={600} />
-              </div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="heading-sm text-dark-foreground group-hover:text-olive transition-colors duration-300">{s.title}</h3>
-                  <p className="body-sm text-warm-grey mt-2 max-w-[220px]">{s.desc}</p>
+              <Link to="/services/$serviceId" params={{ serviceId: s.id }} className="block cursor-pointer">
+                <div className="img-hover-zoom aspect-[4/5] mb-5">
+                  <img src={s.img} alt={s.title} className="w-full h-full object-cover" loading="lazy" width={600} height={600} />
                 </div>
-                <ArrowUpRight className="text-warm-grey group-hover:text-olive transition-all duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 mt-1 shrink-0" size={18} />
-              </div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="heading-sm text-dark-foreground group-hover:text-olive transition-colors duration-300">{s.title}</h3>
+                    <p className="body-sm text-warm-grey mt-2 max-w-[220px]">{s.desc}</p>
+                  </div>
+                  <ArrowUpRight className="text-warm-grey group-hover:text-olive transition-all duration-300 group-hover:translate-x-1 group-hover:-translate-y-1 mt-1 shrink-0" size={18} />
+                </div>
+              </Link>
             </motion.div>
           ))}
         </div>

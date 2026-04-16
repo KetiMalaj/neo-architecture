@@ -1,16 +1,6 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import team1 from "@/assets/team-1.jpg";
-import team2 from "@/assets/team-2.jpg";
-import team3 from "@/assets/team-3.jpg";
-import team4 from "@/assets/team-4.jpg";
-
-const team = [
-  { img: team1, name: "Marcus Hale", role: "Principal Architect" },
-  { img: team2, name: "Elena Voss", role: "Design Director" },
-  { img: team3, name: "David Chen", role: "Project Lead" },
-  { img: team4, name: "Sofia Martell", role: "Interior Specialist" },
-];
 
 export default function TeamSection() {
   const ref = useRef(null);
@@ -23,28 +13,71 @@ export default function TeamSection() {
           initial={{ y: 30, opacity: 0 }}
           animate={inView ? { y: 0, opacity: 1 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="mb-16"
         >
           <p className="label-text mb-4">Our people</p>
           <h2 className="heading-lg text-foreground">Creative Team</h2>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
-          {team.map((t, i) => (
-            <motion.div
-              key={t.name}
-              initial={{ y: 40, opacity: 0 }}
-              animate={inView ? { y: 0, opacity: 1 } : {}}
-              transition={{ duration: 0.6, delay: i * 0.12 }}
-              className="group"
-            >
-              <div className="img-hover-zoom aspect-[3/4] mb-4">
-                <img src={t.img} alt={t.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" loading="lazy" width={600} height={800} />
-              </div>
-              <h4 className="heading-sm text-foreground">{t.name}</h4>
-              <p className="body-sm text-muted-foreground mt-1">{t.role}</p>
-            </motion.div>
-          ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-16 items-center">
+          {/* Photo */}
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={inView ? { y: 0, opacity: 1 } : {}}
+            transition={{ duration: 0.6 }}
+            className="group"
+          >
+            <div className="img-hover-zoom aspect-[3/4]">
+              <img
+                src={team1}
+                alt="Marcus Hale"
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                loading="lazy"
+                width={600}
+                height={800}
+              />
+            </div>
+          </motion.div>
+
+          {/* Description */}
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={inView ? { y: 0, opacity: 1 } : {}}
+            transition={{ duration: 0.6, delay: 0.15 }}
+          >
+            <p className="label-text text-olive mb-3">Principal Architect</p>
+            <h3 className="heading-md text-foreground mb-6">Marcus Hale</h3>
+            <p className="body-lg text-muted-foreground leading-relaxed mb-6">
+              With over 18 years of experience shaping modern spaces, Marcus
+              founded ARCAN Studio with a singular vision — architecture that
+              serves people first. His work bridges the gap between bold
+              contemporary form and quiet, everyday functionality.
+            </p>
+            <p className="body-lg text-muted-foreground leading-relaxed mb-8">
+              A graduate of the Architectural Association in London, Marcus has
+              led projects spanning residential estates, cultural institutions,
+              and mixed-use developments across Europe and the Mediterranean. His
+              design philosophy centers on honest materials, natural light, and
+              spaces that age gracefully.
+            </p>
+            <div className="space-y-4">
+              {[
+                ["Experience", "18+ years"],
+                ["Projects Led", "120+"],
+                ["Specialization", "Modern residential & cultural spaces"],
+              ].map(([label, value], i, arr) => (
+                <div
+                  key={label}
+                  className={`flex justify-between pb-3 ${i < arr.length - 1 ? "border-b border-border" : ""}`}
+                >
+                  <span className="text-muted-foreground text-sm">{label}</span>
+                  <span className="text-foreground text-sm font-medium">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

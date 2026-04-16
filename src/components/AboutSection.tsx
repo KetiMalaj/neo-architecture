@@ -36,7 +36,8 @@ export default function AboutSection() {
                 <span className="text-muted-foreground body-sm">Established for 16 years.</span>
               </div>
               <p className="body-lg text-muted-foreground max-w-lg">
-                We are dedicated to providing outstanding architectural and design services that meet the functional and aesthetic needs of modern living.
+                We are dedicated to providing outstanding architectural and design services that
+                meet the functional and aesthetic needs of modern living.
               </p>
             </AnimatedBlock>
           </div>
@@ -52,7 +53,9 @@ export default function AboutSection() {
                 <div className="flex gap-6 items-start border-b border-border pb-6">
                   <span className="label-text text-olive">0{i + 1}</span>
                   <div>
-                    <span className="font-display text-2xl font-bold text-foreground">{stat.num}</span>
+                    <span className="font-display text-2xl font-bold text-foreground">
+                      {stat.num}
+                    </span>
                     <p className="body-sm text-muted-foreground mt-1">{stat.text}</p>
                   </div>
                 </div>
