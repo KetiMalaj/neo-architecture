@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 export default function Footer() {
   return (
     <footer className="bg-dark section-padding-sm">
@@ -42,6 +44,9 @@ export default function Footer() {
             {["Privacy", "Terms", "Cookies"].map((l) => (
               <a key={l} href="#" className="body-sm text-warm-grey hover:text-dark-foreground transition-colors">{l}</a>
             ))}
+            <Link to="/admin/login" className="body-sm text-warm-grey/40 hover:text-dark-foreground transition-colors">
+              Admin
+            </Link>
           </div>
         </div>
       </div>

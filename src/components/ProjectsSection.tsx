@@ -1,12 +1,17 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { projects } from "@/data/projects";
+import { getProjects } from "@/lib/projectStore";
 
 export default function ProjectsSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
+  const [projects, setProjects] = useState(getProjects());
+
+  useEffect(() => {
+    setProjects(getProjects());
+  }, []);
 
   return (
     <section id="projects" className="section-padding">

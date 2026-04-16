@@ -2,14 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { ArrowLeft, ArrowUpRight, MapPin, Calendar, User, Maximize, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { projects } from "@/data/projects";
+import { getProjects } from "@/lib/projectStore";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 export const Route = createFileRoute("/projects/$projectId")({
   component: ProjectDetailPage,
   head: ({ params }) => {
-    const project = projects.find((p) => p.id === params.projectId);
+    const allProjects = getProjects();
+    const project = allProjects.find((p) => p.id === params.projectId);
     const title = project ? `${project.title} — ARCAN Studio` : "Project — ARCAN Studio";
     const desc = project?.description?.slice(0, 155) ?? "Architecture project by ARCAN Studio.";
     return {
@@ -96,6 +97,7 @@ function Lightbox({
 /* ── Page ── */
 function ProjectDetailPage() {
   const { projectId } = Route.useParams();
+  const projects = getProjects();
   const project = projects.find((p) => p.id === projectId);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
