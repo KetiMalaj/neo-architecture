@@ -12,6 +12,8 @@ import {
   ChevronDown,
   ChevronUp,
   GripVertical,
+  FileText,
+  FolderOpen,
 } from "lucide-react";
 import { isAuthenticated, logout } from "@/lib/auth";
 import {
@@ -21,6 +23,14 @@ import {
   deleteProject,
   generateId,
 } from "@/lib/projectStore";
+import {
+  getBlogPosts,
+  addBlogPost,
+  updateBlogPost,
+  deleteBlogPost,
+  generateBlogId,
+  type BlogPost,
+} from "@/lib/blogStore";
 import type { Project, ProjectSchema } from "@/data/projects";
 
 export const Route = createFileRoute("/admin/")({
@@ -52,9 +62,19 @@ const emptyProject = (): Omit<Project, "id"> => ({
 
 const categories = ["Architecture", "Interior", "Landscape", "Residential", "Commercial", "Hospitality"];
 
+const blogCategories = ["Architecture", "Sustainability", "Interior", "Design", "Technology", "Landscape"];
+
+const emptyBlogPost = (): Omit<BlogPost, "id"> => ({
+  img: "",
+  category: "Architecture",
+  title: "",
+  date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+});
+
 /* ── Dashboard ── */
 function AdminDashboard() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"projects" | "blog">("projects");
   const [projects, setProjects] = useState<Project[]>([]);
   const [editing, setEditing] = useState<Project | null>(null);
   const [isNew, setIsNew] = useState(false);
@@ -66,14 +86,24 @@ function AdminDashboard() {
     gallery: false,
   });
 
+  /* Blog state */
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [isNewPost, setIsNewPost] = useState(false);
+  const [deletePostConfirm, setDeletePostConfirm] = useState<string | null>(null);
+
   useEffect(() => {
     if (typeof window !== "undefined" && !isAuthenticated()) {
       navigate({ to: "/admin/login" });
     }
     setProjects(getProjects());
+    setBlogPosts(getBlogPosts());
   }, [navigate]);
 
-  const refresh = () => setProjects(getProjects());
+  const refresh = () => {
+    setProjects(getProjects());
+    setBlogPosts(getBlogPosts());
+  };
 
   const handleLogout = () => {
     logout();
@@ -177,6 +207,44 @@ function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
+  /* ── Blog handlers ── */
+  const handleNewPost = () => {
+    setEditingPost({ id: "", ...emptyBlogPost() });
+    setIsNewPost(true);
+  };
+
+  const handleEditPost = (post: BlogPost) => {
+    setEditingPost({ ...post });
+    setIsNewPost(false);
+  };
+
+  const handleDeletePost = (id: string) => {
+    deleteBlogPost(id);
+    refresh();
+    setDeletePostConfirm(null);
+  };
+
+  const handleSavePost = () => {
+    if (!editingPost || !editingPost.title) return;
+    const post: BlogPost = {
+      ...editingPost,
+      id: isNewPost ? generateBlogId(editingPost.title) : editingPost.id,
+    };
+    if (isNewPost) {
+      addBlogPost(post);
+    } else {
+      updateBlogPost(post.id, post);
+    }
+    setEditingPost(null);
+    setIsNewPost(false);
+    refresh();
+  };
+
+  const updatePostField = <K extends keyof BlogPost>(key: K, value: BlogPost[K]) => {
+    if (!editingPost) return;
+    setEditingPost({ ...editingPost, [key]: value });
+  };
+
   /* ── Section toggle component ── */
   const SectionHeader = ({ id, title }: { id: string; title: string }) => (
     <button
@@ -217,92 +285,165 @@ function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
-          <div>
-            <h1 className="heading-md text-foreground">Projects</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {projects.length} project{projects.length !== 1 ? "s" : ""}
-            </p>
-          </div>
+        {/* Tabs */}
+        <div className="flex gap-1 mb-10 border-b border-border">
           <button
-            onClick={handleNew}
-            className="flex items-center gap-2 bg-foreground text-background px-5 py-2.5 text-sm font-medium uppercase tracking-widest hover:bg-foreground/90 transition-colors"
+            onClick={() => setActiveTab("projects")}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium uppercase tracking-widest transition-colors border-b-2 -mb-px ${
+              activeTab === "projects"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Plus size={16} />
-            Add Project
+            <FolderOpen size={16} />
+            Projects
+          </button>
+          <button
+            onClick={() => setActiveTab("blog")}
+            className={`flex items-center gap-2 px-5 py-3 text-sm font-medium uppercase tracking-widest transition-colors border-b-2 -mb-px ${
+              activeTab === "blog"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText size={16} />
+            Blog
           </button>
         </div>
 
-        {/* Project list */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((p) => (
-            <motion.div
-              key={p.id}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="border border-border bg-card group"
-            >
-              {/* Thumbnail */}
-              <div className="aspect-[16/10] overflow-hidden relative">
-                {p.img ? (
-                  <img
-                    src={p.img}
-                    alt={p.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <Image size={32} className="text-muted-foreground" />
+        {/* ══════════ PROJECTS TAB ══════════ */}
+        {activeTab === "projects" && (
+          <>
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h1 className="heading-md text-foreground">Projects</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {projects.length} project{projects.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <button
+                onClick={handleNew}
+                className="flex items-center gap-2 bg-foreground text-background px-5 py-2.5 text-sm font-medium uppercase tracking-widest hover:bg-foreground/90 transition-colors"
+              >
+                <Plus size={16} />
+                Add Project
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.map((p) => (
+                <motion.div
+                  key={p.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border border-border bg-card group"
+                >
+                  <div className="aspect-[16/10] overflow-hidden relative">
+                    {p.img ? (
+                      <img src={p.img} alt={p.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Image size={32} className="text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] uppercase tracking-widest bg-dark/70 text-dark-foreground px-2 py-1 backdrop-blur-sm">
+                        {p.category}
+                      </span>
+                    </div>
                   </div>
-                )}
-                <div className="absolute top-3 left-3">
-                  <span className="text-[10px] uppercase tracking-widest bg-dark/70 text-dark-foreground px-2 py-1 backdrop-blur-sm">
-                    {p.category}
-                  </span>
-                </div>
+                  <div className="p-5">
+                    <h3 className="font-display text-lg font-semibold text-foreground mb-1">{p.title}</h3>
+                    <p className="text-sm text-muted-foreground">{p.location} · {p.year}</p>
+                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{p.description}</p>
+                    <div className="flex gap-3 mt-4 pt-4 border-t border-border">
+                      <button onClick={() => handleEdit(p)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <Pencil size={14} /> Edit
+                      </button>
+                      <button onClick={() => setDeleteConfirm(p.id)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {projects.length === 0 && (
+              <div className="text-center py-20">
+                <Image size={48} className="mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No projects yet. Add your first one.</p>
               </div>
+            )}
+          </>
+        )}
 
-              {/* Info */}
-              <div className="p-5">
-                <h3 className="font-display text-lg font-semibold text-foreground mb-1">
-                  {p.title}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {p.location} · {p.year}
+        {/* ══════════ BLOG TAB ══════════ */}
+        {activeTab === "blog" && (
+          <>
+            <div className="flex items-center justify-between mb-10">
+              <div>
+                <h1 className="heading-md text-foreground">Blog Posts</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {blogPosts.length} article{blogPosts.length !== 1 ? "s" : ""}
                 </p>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                  {p.description}
-                </p>
-
-                {/* Actions */}
-                <div className="flex gap-3 mt-4 pt-4 border-t border-border">
-                  <button
-                    onClick={() => handleEdit(p)}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Pencil size={14} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteConfirm(p.id)}
-                    className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors"
-                  >
-                    <Trash2 size={14} />
-                    Delete
-                  </button>
-                </div>
               </div>
-            </motion.div>
-          ))}
-        </div>
+              <button
+                onClick={handleNewPost}
+                className="flex items-center gap-2 bg-foreground text-background px-5 py-2.5 text-sm font-medium uppercase tracking-widest hover:bg-foreground/90 transition-colors"
+              >
+                <Plus size={16} />
+                Add Post
+              </button>
+            </div>
 
-        {projects.length === 0 && (
-          <div className="text-center py-20">
-            <Image size={48} className="mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">No projects yet. Add your first one.</p>
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map((post) => (
+                <motion.div
+                  key={post.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border border-border bg-card group"
+                >
+                  <div className="aspect-[16/10] overflow-hidden relative">
+                    {post.img ? (
+                      <img src={post.img} alt={post.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-muted">
+                        <Image size={32} className="text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] uppercase tracking-widest bg-dark/70 text-dark-foreground px-2 py-1 backdrop-blur-sm">
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-display text-lg font-semibold text-foreground mb-1 line-clamp-2">{post.title}</h3>
+                    <p className="text-sm text-muted-foreground">{post.date}</p>
+                    <div className="flex gap-3 mt-4 pt-4 border-t border-border">
+                      <button onClick={() => handleEditPost(post)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        <Pencil size={14} /> Edit
+                      </button>
+                      <button onClick={() => setDeletePostConfirm(post.id)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-destructive transition-colors">
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {blogPosts.length === 0 && (
+              <div className="text-center py-20">
+                <FileText size={48} className="mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No blog posts yet. Add your first one.</p>
+              </div>
+            )}
+          </>
         )}
       </main>
 
@@ -348,7 +489,136 @@ function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Edit / Add modal ── */}
+      {/* ── Blog delete confirmation modal ── */}
+      <AnimatePresence>
+        {deletePostConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-dark/80 backdrop-blur-sm flex items-center justify-center px-6"
+            onClick={() => setDeletePostConfirm(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card border border-border p-8 max-w-sm w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="font-display text-xl font-semibold text-foreground mb-2">Delete Post</h3>
+              <p className="text-sm text-muted-foreground mb-6">Are you sure? This action cannot be undone.</p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeletePostConfirm(null)} className="flex-1 border border-border py-2.5 text-sm text-foreground hover:bg-muted transition-colors">Cancel</button>
+                <button onClick={() => handleDeletePost(deletePostConfirm)} className="flex-1 bg-destructive text-destructive-foreground py-2.5 text-sm font-medium hover:bg-destructive/90 transition-colors">Delete</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Blog Edit / Add modal ── */}
+      <AnimatePresence>
+        {editingPost && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-dark/80 backdrop-blur-sm flex items-start justify-center overflow-y-auto py-10 px-6"
+          >
+            <motion.div
+              initial={{ y: 40, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 40, opacity: 0 }}
+              className="bg-card border border-border w-full max-w-2xl my-auto"
+            >
+              <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between z-10">
+                <h2 className="font-display text-xl font-semibold text-foreground">
+                  {isNewPost ? "New Blog Post" : "Edit Blog Post"}
+                </h2>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleSavePost} className="flex items-center gap-2 bg-foreground text-background px-4 py-2 text-sm font-medium uppercase tracking-widest hover:bg-foreground/90 transition-colors">
+                    <Save size={14} /> Save
+                  </button>
+                  <button onClick={() => { setEditingPost(null); setIsNewPost(false); }} className="text-muted-foreground hover:text-foreground transition-colors">
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                {/* Cover image */}
+                <div>
+                  <label className="label-text mb-2 block">Cover Image</label>
+                  <div className="flex items-start gap-4">
+                    {editingPost.img && (
+                      <img src={editingPost.img} alt="Cover" className="w-32 h-24 object-cover border border-border" />
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload(e, (url) => updatePostField("img", url))}
+                        className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:border file:border-border file:text-sm file:bg-muted file:text-foreground hover:file:bg-muted/80 file:cursor-pointer"
+                      />
+                      <p className="text-xs text-muted-foreground">Or paste an image URL:</p>
+                      <input
+                        type="text"
+                        value={editingPost.img}
+                        onChange={(e) => updatePostField("img", e.target.value)}
+                        className="w-full bg-background border border-border px-3 py-2 text-sm text-foreground focus:outline-none focus:border-muted-foreground"
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="label-text mb-2 block">Title *</label>
+                  <input
+                    type="text"
+                    value={editingPost.title}
+                    onChange={(e) => updatePostField("title", e.target.value)}
+                    className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-muted-foreground"
+                    placeholder="Article title"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Category */}
+                  <div>
+                    <label className="label-text mb-2 block">Category</label>
+                    <select
+                      value={editingPost.category}
+                      onChange={(e) => updatePostField("category", e.target.value)}
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-muted-foreground"
+                    >
+                      {blogCategories.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date */}
+                  <div>
+                    <label className="label-text mb-2 block">Date</label>
+                    <input
+                      type="text"
+                      value={editingPost.date}
+                      onChange={(e) => updatePostField("date", e.target.value)}
+                      className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-muted-foreground"
+                      placeholder="Apr 10, 2026"
+                    />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Project Edit / Add modal ── */}
       <AnimatePresence>
         {editing && (
           <motion.div

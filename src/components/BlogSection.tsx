@@ -1,19 +1,16 @@
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ArrowUpRight } from "lucide-react";
-import blog1 from "@/assets/blog-1.jpg";
-import blog2 from "@/assets/blog-2.jpg";
-import blog3 from "@/assets/blog-3.jpg";
-
-const posts = [
-  { img: blog1, category: "Architecture", title: "Every designed space tells a story of intention.", date: "Apr 10, 2026" },
-  { img: blog2, category: "Sustainability", title: "Building green is building for the future.", date: "Mar 22, 2026" },
-  { img: blog3, category: "Interior", title: "The art of combining function with beauty.", date: "Feb 15, 2026" },
-];
+import { getBlogPosts, type BlogPost } from "@/lib/blogStore";
 
 export default function BlogSection() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-100px" });
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+
+  useEffect(() => {
+    setPosts(getBlogPosts());
+  }, []);
 
   return (
     <section id="blog" className="section-padding">

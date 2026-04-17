@@ -7,7 +7,7 @@ export default function TeamSection() {
   const inView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id="team" className="section-padding">
+    <section className="section-padding">
       <div className="max-w-7xl mx-auto" ref={ref}>
         <motion.div
           initial={{ y: 30, opacity: 0 }}

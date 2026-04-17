@@ -4,7 +4,6 @@ import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import ServicesSection from "@/components/ServicesSection";
 import ProjectsSection from "@/components/ProjectsSection";
-import CaseStudySection from "@/components/CaseStudySection";
 import StatsCounter from "@/components/StatsCounter";
 import TeamSection from "@/components/TeamSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
@@ -30,11 +29,10 @@ function Index() {
       <Navbar />
       <HeroSection />
       <AboutSection />
+      <TeamSection />
       <ServicesSection />
       <ProjectsSection />
-      <CaseStudySection />
       <StatsCounter />
-      <TeamSection />
       <TestimonialsSection />
       <BlogSection />
       <ContactSection />
