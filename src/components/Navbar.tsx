@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
@@ -12,6 +13,21 @@ const navLinks = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const isHomePage = typeof window !== "undefined" && window.location.pathname === "/";
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (!isHomePage) {
+      e.preventDefault();
+      navigate({ to: "/" }).then(() => {
+        setTimeout(() => {
+          const id = href.replace("#", "");
+          document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+        }, 100);
+      });
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -28,7 +44,7 @@ export default function Navbar() {
       }`}
     >
       <div className="flex items-center justify-between px-6 md:px-12 lg:px-24">
-        <a href="#" className={`font-display text-2xl font-bold tracking-tight transition-colors duration-500 ${scrolled ? "text-foreground" : "text-dark-foreground"}`}>
+        <a href="/" className={`font-display text-2xl font-bold tracking-tight transition-colors duration-500 ${scrolled ? "text-foreground" : "text-dark-foreground"}`}>
           ARCAN
         </a>
 
@@ -38,6 +54,7 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
               className={`text-xs uppercase tracking-[0.2em] font-medium transition-colors duration-300 hover:opacity-60 ${
                 scrolled ? "text-foreground" : "text-dark-foreground"
               }`}
@@ -63,7 +80,7 @@ export default function Navbar() {
             <a
               key={link.label}
               href={link.href}
-              onClick={() => setMenuOpen(false)}
+              onClick={(e) => { setMenuOpen(false); handleNavClick(e, link.href); }}
               className="block py-3 text-sm uppercase tracking-[0.15em] text-foreground hover:text-muted-foreground transition-colors"
             >
               {link.label}

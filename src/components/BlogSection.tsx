@@ -1,6 +1,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { getBlogPosts, type BlogPost } from "@/lib/blogStore";
 
 export default function BlogSection() {
@@ -36,21 +37,23 @@ export default function BlogSection() {
               transition={{ duration: 0.6, delay: i * 0.15 }}
               className="group cursor-pointer"
             >
-              <div className="img-hover-zoom aspect-[4/3] mb-5">
-                <img src={post.img} alt={post.title} className="w-full h-full object-cover" loading="lazy" width={800} height={600} />
-              </div>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="label-text text-olive">{post.category}</span>
-                <span className="w-6 h-px bg-border" />
-                <span className="body-sm text-muted-foreground">{post.date}</span>
-              </div>
-              <h3 className="heading-sm text-foreground group-hover:text-olive transition-colors duration-300 leading-snug">
-                {post.title}
-              </h3>
-              <div className="flex items-center gap-1.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="text-xs uppercase tracking-widest text-olive">Read more</span>
-                <ArrowUpRight size={14} className="text-olive" />
-              </div>
+              <Link to="/blog/$postId" params={{ postId: post.id }}>
+                <div className="img-hover-zoom aspect-[4/3] mb-5">
+                  <img src={post.img} alt={post.title} className="w-full h-full object-cover" loading="lazy" width={800} height={600} />
+                </div>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="label-text text-olive">{post.category}</span>
+                  <span className="w-6 h-px bg-border" />
+                  <span className="body-sm text-muted-foreground">{post.date}</span>
+                </div>
+                <h3 className="heading-sm text-foreground group-hover:text-olive transition-colors duration-300 leading-snug">
+                  {post.title}
+                </h3>
+                <div className="flex items-center gap-1.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="text-xs uppercase tracking-widest text-olive">Read more</span>
+                  <ArrowUpRight size={14} className="text-olive" />
+                </div>
+              </Link>
             </motion.article>
           ))}
         </div>

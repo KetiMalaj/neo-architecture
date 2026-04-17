@@ -69,6 +69,7 @@ const emptyBlogPost = (): Omit<BlogPost, "id"> => ({
   category: "Architecture",
   title: "",
   date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+  description: "",
 });
 
 /* ── Dashboard ── */
@@ -424,6 +425,9 @@ function AdminDashboard() {
                   <div className="p-5">
                     <h3 className="font-display text-lg font-semibold text-foreground mb-1 line-clamp-2">{post.title}</h3>
                     <p className="text-sm text-muted-foreground">{post.date}</p>
+                    {post.description && (
+                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{post.description}</p>
+                    )}
                     <div className="flex gap-3 mt-4 pt-4 border-t border-border">
                       <button onClick={() => handleEditPost(post)} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
                         <Pencil size={14} /> Edit
@@ -583,6 +587,19 @@ function AdminDashboard() {
                     placeholder="Article title"
                     required
                   />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="label-text mb-2 block">Description</label>
+                  <textarea
+                    value={editingPost.description}
+                    onChange={(e) => updatePostField("description", e.target.value)}
+                    rows={8}
+                    className="w-full bg-background border border-border px-3 py-2.5 text-sm text-foreground focus:outline-none focus:border-muted-foreground resize-y"
+                    placeholder="Write the full article content here. Use double line breaks to separate paragraphs."
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Separate paragraphs with empty lines.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

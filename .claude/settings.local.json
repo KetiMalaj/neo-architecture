@@ -4,7 +4,8 @@
       "Bash(git pull:*)",
       "Bash(git stash:*)",
       "Bash(npx tsr:*)",
-      "Bash(magick --version)"
+      "Bash(magick --version)",
+      "Bash(npx:*)"
     ]
   }
 }
